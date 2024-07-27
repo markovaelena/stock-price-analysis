@@ -1,0 +1,204 @@
+---
+title: "PSTAT 174 Final Project: Time Series Analysis of Netflix Stock Prices"
+author: "Elena Markova (esmarkova@ucsb.edu)"
+date: "Spring 2024"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo=FALSE, message = FALSE, warning = FALSE, error = FALSE, results = FALSE
+)
+```
+
+# Abstract
+
+This analysis of Netflix (NFLX) stock prices will employ various time series data analysis methods to predict future NFLX stock prices, based on past stock price data. By using both a Seasonal Autoregressive Integrated Moving Average (SARIMA) and General Autoregressive Conditional Heteroskedasticity (GARCH) model approach, I will attempt to discover patterns in order to somewhat accurately predict stock prices. However, financial data is extremely volatile and highly unpredictable due to its reliance on external effects. Due to this, daily predictions might not be entirely accurate but I am hopeful that long term averages will be fairly similar to actual observed stock price trends. The motivation of this topic is to combine my economic background with my statistical knowledge in order to discover ways of doing financial analysis.
+
+\newpage
+
+# 1. Introduction
+
+This project aims to both model and forecast Netflix stock prices using various time series analysis methods. I am currently studying both Economics as well as Statistics and the combination of these interests has resulted in my fascination with finance and the stock market. The purpose of this specific project, then, is not to pretend that stock prices can be perfectly predicted (it's not possible due to their reactions to a wide range of externalities), but rather to begin applying tools I have learned in this class and develop my financial analysis skill set. In doing so, I seek to bridge theoretical knowledge with practical application, providing a hands-on approach to understanding complex financial data. Choosing Netflix as a data set was in part due to convenience in data collection, which is very helpful in a busy college quarter, but also because Netflix is a very interesting company that had a lot of changes going on at this specific time. Moreover, Netflix’s position as a leading entertainment company undergoing significant shifts in business strategy and market conditions presents a rich context for exploring the dynamics of stock price movements. Overall, this dataset serves as a critical resource for exploring the volatility and trends in Netflix’s stock price, contributing to a deeper understanding of how significant market events and corporate strategies impact stock performance. Through this analysis, I aim to sharpen my analytical skills and build a strong foundation for further studies.
+
+I am curious to see what forecast these models can come up with and then compare to the observed values that came with the aftermath of all of the business decisions made by Netflix executives. This comparison will not only test the efficacy of the models but also provide insights into the impact of corporate decisions on stock price volatility and trends. Obviously there have been multitudes of studies and modelings done on stock prices for all sorts of companies and indices, but this project will focus in on one company and provide some sort of initial, beneficial analysis.
+
+For this specific analysis, I will be utilizing the SARIMA and ARCH/GARCH models. These models will help uncover patterns and forecast potential future prices, contributing to a deeper understanding of the underlying mechanisms driving Netflix’s stock price behavior. Through this project we will discover certain characteristics of the Netflix stock prices as well as some potential forecasted prices. Ultimately, this analysis aims to provide a foundational perspective on stock price modeling, paving the way for more sophisticated financial analyses in the future.
+
+\newpage
+
+# 2. Data
+
+The data set used in this project tracks daily Netflix stock prices from 5th Feb 2018 and 5th Feb 2022. The frequency of the data set is daily, the units are US dollars, and the values are nonnegative. Each entry records a daily snapshot of the stock market activity, ensuring a high-resolution view of Netflix’s stock performance over this period. The data set tracks the daily Open, High, Low, Close, and Adjusted Close prices, however for this analysis we will be using the Close prices to get a consistent tracking of changes during the day without getting impacted by after hours fluctuations. The Close prices provide a clear picture of the stock’s performance by capturing the price at the end of the regular trading day, which is a critical indicator for financial analysis.
+
+The sample size of the time series data set is 1009 daily observations. This corresponds to four years of trading data, specifically 252 trading days per year, accounting for weekends, holidays, and other market closures. This data was collected individually by Jainil Shah and is available on Kaggle: <https://www.kaggle.com/datasets/jainilcoder/netflix-stock-price-prediction/data>. This data collection involved meticulous daily tracking of Netflix’s stock price, ensuring a comprehensive and reliable dataset for analysis. The collection process focused on capturing accurate and detailed financial data, which is critical for meaningful statistical analysis.
+
+As far as the reason behind this specific data, being an Economics/Accounting double major, I am really interesting getting into finance. Being able to use data science and apply it to my estimations and forecasts of finance and stocks would be really interesting for me and the ultimate goal of my studies. I also chose Netflix stock specifically because it’s been very interesting to me to see what happened to it with the rise of multiple other streaming platforms. This data set is not only important due to its high level of detail and reliability but also because it captures a period of significant transformation for Netflix. Understanding the fluctuations in Netflix’s stock price during this time can provide insights into the broader trends in the media and entertainment industry. Overall, this data set serves as a critical resource for exploring the volatility and trends in Netflix’s stock price, contributing to a deeper understanding of how significant market events and corporate strategies impact stock performance.
+
+\newpage
+
+# 3. Methodology
+
+## 3.1 SARIMA Model
+
+This project will first investigate a Seasonal Autoregressive Integrated Moving Average (SARIMA) model, denoted as (p, d, q) x (P, D, Q) with seasonal period s. This model is designed to analyze and forecast time series data exhibiting both non-seasonal and seasonal patterns. SARIMA extends the ARIMA model by incorporating components specifically tailored to address seasonal fluctuations that occur at regular intervals, which are common in stock prices due to periodic economic events, earnings reports, and market cycles. Seasonal differencing (I) and seasonal autoregressive (AR) and moving average (MA) components are integrated to handle these periodic fluctuations inherent in stock prices. The SARIMA model combines these seasonal components with non-seasonal AR, I, and MA terms to provide a comprehensive framework for capturing the complexities of financial time series data.
+
+We determine the parameters p,d,q,P,D,Q, and s for our model through a systematic approach. This involves visual inspection of time series plots to identify trends and seasonality, and examination of the autocorrelation function (ACF) and partial autocorrelation function (PACF) plots to detect potential lagged relationships. These plots help in diagnosing the series for both non-seasonal and seasonal components, indicating the need for differencing to achieve stationarity. We also apply differencing or log transformations to stabilize variance and make the series stationary. Subsequent model selection is based on comparing various candidate models using the Akaike Information Criterion (AIC), ensuring an optimal fit that balances model complexity with explanatory power. Diagnostic checks, including residual analysis and the Ljung-Box test for autocorrelation, are then performed to validate the adequacy of the model. These diagnostics are essential to confirm that the residuals resemble white noise, indicating that the model has successfully captured the underlying data structure.
+
+By effectively capturing both trend and seasonality, the SARIMA model provides a robust framework for modeling the complex dynamics of stock prices, facilitating accurate short- to medium-term forecasting. The ability of SARIMA to account for periodic fluctuations makes it particularly valuable for financial time series, where seasonal effects can significantly influence price movements.
+
+## 3.2 GARCH Model
+
+The Generalized Autoregressive Conditional Heteroskedasticity (GARCH) model is used to analyze and forecast time series data with time-varying volatility, a distinguishing characteristic of financial markets like stock prices. GARCH models extend the ARCH framework by incorporating past conditional variances in addition to past squared returns, allowing for a more flexible and realistic modeling of volatility clusters. This allows the GARCH model to better reflect the persistence of volatility in financial data, where periods of high volatility tend to follow each other, and the volatility shocks decay over time.
+
+The methodology involves specifying a GARCH(p, q) model, where p represents the lag order of past variances and q denotes the lag order of past squared returns, and estimating these parameters using maximum likelihood methods. Model diagnostics, including examining the residuals for autocorrelation and heteroskedasticity using the Ljung-Box test, are critical to ensure that the model adequately captures the dynamics of the data.
+
+By accurately modeling the time-varying nature of volatility, the GARCH model offers valuable insights into the risk associated with financial assets. It enhances our ability to anticipate future market behavior and volatility, providing critical information for risk management and investment decision-making. The GARCH model’s ability to adapt to changing market conditions and capture volatility patterns makes it an essential tool for understanding the complexities of financial time series and for developing robust financial forecasts.
+
+\newpage
+
+# 4. Results
+
+## 4.1 SARIMA Model
+
+```{r}
+set.seed(123)
+library(tidyverse)
+library(rugarch)
+library(quantmod)
+library(zoo)
+library(vars)
+library(astsa)
+library(dplyr)
+library(forecast)
+library(tseries)
+library(fGarch)
+```
+
+### 4.1.1 Transforming the Data
+
+Our first step is to see what our original data looks like as well as its ACF and PACF graphs:
+
+```{r, out.width='40%', out.height='40%', fig.align='center'}
+nflx <- read.csv("NFLX.csv")
+nflx <- nflx %>% mutate(Date = as.Date(Date))
+nflx_ts <- ts(nflx$Close, start=c(2018,36), end=c(2022,36), frequency=252)
+#plot(nflx_ts)
+n <- length(nflx_ts)
+```
+
+```{r, out.width='70%', out.height='70%', fig.align='center'}
+layout(matrix(c(1, 2, 1, 3), nrow = 2, byrow = TRUE))
+plot(nflx$Date, nflx$Close, main = "NFLX Closing Price 02/2018-02/2022", 
+     type = 'l', xlab = 'Date in Years', ylab='NFLX Closing Price')
+acf(c(nflx_ts), main="Original ACF")
+pacf(c(nflx_ts), main="Original PACF")
+```
+
+Since we can see an upward trend here, we conclude that the data is not stationary and requires some adjustments. Due to the ACF going down very slowly, we apply a log transformation to make the data more stationary. As we can see in the ACF and PACF plots below, the log transformation made our data stationary and we will be able to continue with our SARIMA modeling. This does make sense, though, because time series analysis of financial data, such as stock prices, is usually done on the log return which is exactly what we have found here.
+
+```{r, out.width='70%', out.height='70%', fig.align='center'}
+layout(matrix(c(1, 2, 1, 3), nrow = 2, byrow = TRUE))
+nflx_log <- diff(log(nflx_ts))
+plot(nflx_log, main = "Log Return")
+acf(c(nflx_log), main="Log ACF")
+pacf(c(nflx_log), main="Log PACF")
+```
+
+### 4.1.2 Selecting and Fitting a Model
+
+The approach we are using in this project is the Box-Jenkins method that, after the plotting and transforming that we have done in the previous steps, goes through parameter estimation based on ACF/PACF, diagnostics, and model selection. In these plots we can see that the ACF cuts off after 0, which is a good sign for our stationarity and the PACF has significant values at 6 and 18. We can also see from all of the data that it doesn't seem that there is too much seasonality in our data so we will be running all of these models without the assumption of seasonality. With these findings and estimations, we will now test out an automated fit of SARIMA(2,0,2) as well as an an SARIMA(0,0,6) and SARIMA(0,0,18). From these models, we will choose the one with the lowest AIC (Akaike Information Criterion).
+
+```{r, out.width='70%', out.height='70%', fig.align='center'}
+summary(auto.arima(nflx_log, seasonal=FALSE))
+adf.test(nflx_log)
+pp.test(nflx_log)
+
+par(mfrow=c(1,1))
+#sarima(nflx_log, 0, 1, 6)
+#sarima(nflx_log, 0, 0, 18)
+u <- sarima(nflx_log, 2, 0, 2)
+
+m1 <-arima(x=nflx_log, order=c(0,0,6)); m1
+m2 <- arima(x=nflx_log, order=c(0,0,18)); m2
+m3 <- arima(x=nflx_log, order=c(2,0,2)); m3
+Models <- c("ARIMA(0,0,6)", "ARIMA(0,0,18)", "ARIMA(2,0,2)")
+AIC <- c(m1$aic, m2$aic, m3$aic)
+comparsion <- data.frame(Models, AIC); comparsion
+```
+
+As we expected, none of the models that we tested fit the data perfectly, but we can choose the best one. From the three models that we did diagnostics on, the ARIMA(2,0,2) model had the lowest AIC as well as the lowest p-values, consistently, for the Ljung-Box statistic. Looking at the results above for the ARIMA(2,0,2), we can take out a few observations. First, the standardized residuals plot shows that the residuals are randomly distributed around 0, which indicates that this model is a good fit for the data. Next, the ACF of the residuals shows that there is no significant autocorrelation which means that our model was able to capture the structure of the data. The Normal Q-Q plot then tests the normality of the standard residuals and since the majority of our points lie along the reference line, we can assume that our residuals are normally distributed. And finally, the Ljung-Box test p-values are all fairly small which suggests no significant autocorrelation in the residuals.
+
+### 4.1.3 Forecasting
+
+Since the model seems to fit our data fairly well and the residuals are normally distributed and uncorrelated. This suggests that our model has been able to pick up on patterns in the data and can now be used for fairly reliable forecasting. Here we will now forecast the next 12 daily values for the differenced, log-transformed closing prices.
+
+```{r, out.width='70%', out.height='70%', fig.align='center'}
+nflx_forecast <- sarima.for(nflx_log, n.ahead = 12, plot.all = F, p = 2, d = 0, q = 2)
+nflx_forecast
+forecasted_values <- nflx_forecast$pred
+forecasted_values
+```
+
+## 4.2 GARCH Model
+
+### 4.2.1 Why a GARCH Model?
+
+The SARIMA model's ability to account for autocorrelations and seasonal fluctuations provided us with a framework to understand the underlying structures. However, financial time series, such as stock prices, are often characterized not only by their trends and seasonal components but also by their volatility, which exhibits time-varying properties and clustering effects that are not well captured by the SARIMA approach.
+
+To address this limitation and to model the conditional heteroscedasticity inherent in stock price data, we now transition to the GARCH model. GARCH models are specifically designed to handle and forecast the volatility of time series, offering insights into the variance dynamics over time. By applying GARCH analysis, we aim to better understand and predict the variability and risk associated with the stock price movements, which will ultimately complement the insights gained from the SARIMA model.
+
+### 4.2.2 Selecting and Fitting a Model
+
+We will now continue with our analysis seeing as the volatility seems to change over time. This section will now build off of our previous SARIMA model and attempt to tie in some GARCH analysis to strengthen our modeling of the data.
+
+```{r, out.width='60%', out.height='60%', fig.align='center'}
+par(mfrow=c(1,2))
+par(mar=c(5, 4, 5, 2) +0.1)
+acf(resid(u$fit)^2, main = "ACF of Squared Residuals")
+pacf(resid(u$fit)^2, main = "PACF of Squared Residuals")
+```
+
+Based off of the ACF and PACF of the squared residuals, we can see that there may be some dependence in the residuals. From this, it looks as though fitting a GARCH(p,q) model will be very helpful in capturing the dependence of the residuals. In this analysis we will fit a GARCH(1,0) and a GARCH (1,1) model, avoiding parameters too large to prevent overfitting.
+
+```{r, out.width='80%', out.height='80%', fig.align='center'}
+summary(use <- garchFit(~arma(2,2) + garch(1,0), nflx_log))
+summary(oop <- garchFit(~arma(2,2) + garch(1,1), nflx_log))
+par(mfrow=c(2,2))
+par(mar=c(5, 4, 5, 2) +0.1)
+# plot(use, which = 2)
+# plot(use, which = 9)
+# plot(use, which = 10)
+# plot(use, which = 13)
+
+plot(oop, which = 2)
+plot(oop, which = 9)
+plot(oop, which = 10)
+plot(oop, which = 13)
+```
+
+With both the GARCH(1,0) and GARCH(1,1) we do see an improvement in the ability of the model to accurately capture and portray the data. However, comparing the diagnostics of each model, we choose the GARCH(1,1) model over the GARCH(1,0) model. We can see that the residuals behave more normally now, but the GARCH(1,1) model has a lower AIC and the Conditional SD plot more accurately captures the volatility that we witnessed in the actual data that we are modeling. Therefore, we can now express our developed model of this data as ARMA(2,2)-GARCH(1,1). Overall, this model does a fairly good job at capturing the patterns and structure of the data and will allow us to obtain reasonable estimates of forecasted values. The addition of the GARCH model overall gave us an even lower AIC and is a benefit to our analysis. This improvement is mainly due to taking into account the heteroskedasticity and volatility of the data.
+
+\newpage
+
+# Conclusion & Future Study
+
+In this project we have attempted to fit our Netflix stock price time series data with both a SARIMA and GARCH model in order to try and accurately capture the underlying structure and trend of the data. Through our model selection process, we were able to determine that our best performing model was the ARMA(2,2)-GARCH(1,1) model. Although the results were not absolutely perfect, I would still say that we were able to achieve a decent fit upon the data. Due to the overwhelming effect of external factors upon stock prices, there are certain outliers that are simply impossible to predict. However, although we cannot predict these events, our GARCH model can latch onto those effects once they've taken place and give us an adjusted perception of the volatility of the price, which would indicate less stability. Overall, we were able to come to a fairly successful conclusion of this project and from here there are many opportunities for improvement or further study.
+
+In terms of future improvement of this project, I definitely think that applying more advanced and methods and models would be a big factor in improvement. Although we were able to get fairly far in our analysis, the methods applied here are still fairly simple and are not comprehensive enough to tackle the full complexity of a stock market. From here I plan to extend my knowledge and deepen my understanding of new and improved methods and models in order to further my skills of fianancial market analysis. I do hope to be able to keep coming back to this project as a means to see the development and really push how far I can take this analysis. Overall this project was very enjoyable and definitely allowed me to have a practical application two both my areas of study. This project has really opened my eyes to the possibilities of time series analysis and I am excited to see what progress can be done on this specific analysis and forecasting of stock prices.
+
+\newpage
+
+# References
+
+Shumway, R. H., & Stoffer D. S. *Time Series Analysis and Its Applications with R Examples (4th edition)*. Springer.
+
+Shah, Jainil. “Netflix Stock Price Prediction.” *Kaggle*, 5 Feb. 2022, <https://www.kaggle.com/datasets/jainilcoder/netflix-stock-price-prediction/data>.
+
+# Code Appendix
+
+```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+
+```
